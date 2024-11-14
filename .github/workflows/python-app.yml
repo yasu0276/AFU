@@ -43,7 +43,7 @@ jobs:
           name: executable-${{ matrix.os }}
           path: dist/your_script${{ matrix.os == 'windows-latest' && '.exe' || '' }}
 
-          - name: Create Release
+      - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         with:
