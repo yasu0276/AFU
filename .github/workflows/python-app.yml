@@ -28,7 +28,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller　TkEasyGUI　simpleaudio
+          pip install -r requirements.txt  # requirements.txt からライブラリをインストール
 
       - name: Build Executable with PyInstaller
         run: |
