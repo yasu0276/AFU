@@ -10,6 +10,9 @@ on:
   release:
     types: [created]  # タグが作成されたときにトリガー
 
+permissions:
+  contents: write  # 明示的に書き込み権限を付与
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -37,12 +40,6 @@ jobs:
           pyinstaller --onefile src/main.py --name main --collect-data TkEasyGUI -y
         shell: bash  # Windowsでもbashを利用
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: executable-${{ matrix.os }}
-          path: dist/your_script${{ matrix.os == 'windows-latest' && '.exe' || '' }}
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -52,22 +49,12 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHubのアクセストークンを使用してリリースを作成
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Release Asset (macOS/Linux)
-        if: matrix.os != 'windows-latest'  # Windows以外
+      - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/main  # 実行ファイルのパスを指定
-          asset_name: main-${{ matrix.os }}
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Asset (Windows)
-        if: matrix.os == 'windows-latest'  # Windowsのみ
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/main.exe  # Windows向けに拡張子を付ける
-          asset_name: main.exe
+          asset_path: dist/your_script
+          asset_name: your_script
           asset_content_type: application/octet-stream
