@@ -1,2 +1,2 @@
-TkEasyGUI
+tkinterdnd2
 Pyinstaller
