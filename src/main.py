@@ -14,12 +14,17 @@ class MyApp(TkinterDnD.Tk):
         self.title(f'AFU')
 
         ## フレーム
-        self.frame_drag_drop = frameDragAndDrop(self)
+        self.drag_and_drop_frames_f = frameDragAndDrop(self)
+        self.drag_and_drop_frames_s = frameDragAndDrop(self)
 
         ## 配置
-        self.frame_drag_drop.grid(column=0, row=0, padx=5, pady=5, sticky=(tk.E, tk.W, tk.S, tk.N))
+        self.drag_and_drop_frames_f.grid(column=0, row=0, padx=5, pady=5, sticky=(tk.E, tk.W, tk.S, tk.N))
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
+
+        self.drag_and_drop_frames_s.grid(column=0, row=1, padx=5, pady=5, sticky=(tk.E, tk.W, tk.S, tk.N))
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
 
 class frameDragAndDrop(tk.LabelFrame):
     def __init__(self, parent):
@@ -44,7 +49,10 @@ class frameDragAndDrop(tk.LabelFrame):
 
     def funcDragAndDrop(self, e):
         ## ここを編集してください
-        print(e.data)
+        self.textbox.config(state="normal")
+        self.textbox.delete("1.0", tk.END)
+        self.textbox.insert(tk.END, e.data)
+        self.textbox.configure(state="disabled")
 
 if __name__ == "__main__":
     app = MyApp()
