@@ -13,18 +13,32 @@ class MyApp(TkinterDnD.Tk):
         self.maxsize(width, height)
         self.title(f'AFU')
 
-        ## フレーム
+        ## Drag & Drop フレーム
         self.drag_and_drop_frames_f = frameDragAndDrop(self)
         self.drag_and_drop_frames_s = frameDragAndDrop(self)
 
-        ## 配置
-        self.drag_and_drop_frames_f.grid(column=0, row=0, padx=5, pady=5, sticky=(tk.E, tk.W, tk.S, tk.N))
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
+        # Start, Stop フレーム
+        self.button_start = tk.Button(self, text="start", command=self.execute_start, width=20)
+        self.button_stop = tk.Button(self, text="stop", command=self.execute_stop, width=20)
 
-        self.drag_and_drop_frames_s.grid(column=0, row=1, padx=5, pady=5, sticky=(tk.E, tk.W, tk.S, tk.N))
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        ## 配置
+        self.drag_and_drop_frames_f.grid(row=0, column=0, padx=5, pady=5, sticky=(tk.E, tk.W, tk.S, tk.N))
+        self.rowconfigure(index=0, weight=1)
+        self.columnconfigure(index=0, weight=1)
+
+        self.drag_and_drop_frames_s.grid(row=1, column=0, padx=5, pady=5, sticky=(tk.E, tk.W, tk.S, tk.N))
+        self.rowconfigure(index=1, weight=1)
+        self.columnconfigure(index=0, weight=1)
+
+        self.button_start.grid(row=2, column=0, padx=5, pady=5)
+
+        self.button_stop.grid(row=2, column=1, padx=5, pady=5)
+
+    def execute_start(self):
+        print("start")
+
+    def execute_stop(self):
+        print("stop")
 
 class frameDragAndDrop(tk.LabelFrame):
     def __init__(self, parent):
