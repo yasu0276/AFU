@@ -8,18 +8,14 @@ def get_window_size():
     root.destroy()
     return (width, height)
 
+
 class MyApp(TkinterDnD.Tk):
     def __init__(self):
         super().__init__()
 
-        # Main フレーム
-        self.main_frame = tk.Frame()
-        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        self.main_frame.columnconfigure(index=0, weight=1)
-        self.main_frame.columnconfigure(index=1, weight=1)
-        self.main_frame.rowconfigure(index=0, weight=1)
-        self.main_frame.rowconfigure(index=1, weight=1)
-        self.main_frame.rowconfigure(index=2, weight=1)
+
+        # ESC キーをバインド
+        self.bind('<Escape>', lambda evnet: self.on_escape())
 
         # ウィンドウサイズ
         (max_width, max_height) = get_window_size()
@@ -30,36 +26,39 @@ class MyApp(TkinterDnD.Tk):
         self.maxsize(max_width, max_height)
         self.title(f'AFU')
 
-        ## Drag & Drop フレーム
-        self.drag_and_drop_frames_f = frameDragAndDrop(self.main_frame)
-        self.drag_and_drop_frames_f.grid(row=0, column=0, padx=5, pady=5, sticky=(tk.E, tk.W))
+        # 列要素の拡張対応
+        self.columnconfigure(index=0, weight=1)
+
+        # 行要素の拡張対応
         self.rowconfigure(index=0, weight=1)
-        self.columnconfigure(index=0, weight=1)
-
-        self.drag_and_drop_frames_s = frameDragAndDrop(self.main_frame)
-        self.drag_and_drop_frames_s.grid(row=1, column=0, padx=5, pady=5, sticky=(tk.E, tk.W))
         self.rowconfigure(index=1, weight=1)
-        self.columnconfigure(index=0, weight=1)
+        self.rowconfigure(index=2, weight=0) # ボタン用のフレームを固定する
 
-        # ボタン用フレーム
-        self.button_frame = tk.Frame(self.main_frame)
-        self.button_frame.grid(row=2, column=0, padx=5, pady=5, sticky=(tk.E, tk.W))
-        self.button_frame.columnconfigure(index=0, weight=1)
-        self.button_frame.columnconfigure(index=1, weight=1)
+        ## Drag & Drop フレーム
+        self.drag_and_drop_frames_f = frameDragAndDrop(self)
+        self.drag_and_drop_frames_f.grid(row=0, column=0, padx=5, pady=5, sticky='ew')
 
-        # ボタン作成
-        self.button_start = tk.Button(self.button_frame, text="start", command=self.execute_start)
-        self.button_stop = tk.Button(self.button_frame, text="stop", command=self.execute_stop)
+        self.drag_and_drop_frames_s = frameDragAndDrop(self)
+        self.drag_and_drop_frames_s.grid(row=1, column=0, padx=5, pady=5, sticky='ew')
 
-        # 配置
-        self.button_start.grid(row=0, column=0, padx=5, pady=5)
-        self.button_stop.grid(row=0, column=1, padx=5, pady=5)
+        # ボタンフレーム
+        self.button_frame = tk.Frame(self)
+        self.button_frame.grid(row=2, column=0, padx=0, pady=5)
+
+        self.button_frame_left = tk.Button(self.button_frame, text="start", command=self.execute_start, width=20)
+        self.button_frame_left.pack(side=tk.LEFT, padx=10)
+
+        self.button_frame_right = tk.Button(self.button_frame, text="stop", command=self.execute_stop, width=20)
+        self.button_frame_right.pack(side=tk.LEFT, padx=10)
 
     def execute_start(self):
         print("start")
 
     def execute_stop(self):
         print("stop")
+
+    def on_escape(self):
+        self.quit()
 
 class frameDragAndDrop(tk.LabelFrame):
     def __init__(self, parent):
@@ -77,10 +76,10 @@ class frameDragAndDrop(tk.LabelFrame):
         self.textbox['yscrollcommand'] = self.scrollbar.set
 
         ## 配置
-        self.textbox.grid(column=0, row=0, sticky=(tk.E, tk.W))
-        self.scrollbar.grid(row=0, column=1, sticky=(tk.E, tk.W))
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
+        self.textbox.grid(row=0, column=0, sticky='ewns')
+        self.scrollbar.grid(row=0, column=1, sticky='ewns')
 
     def funcDragAndDrop(self, e):
         ## ここを編集してください
