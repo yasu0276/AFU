@@ -1,6 +1,7 @@
 import tkinter as tk
 import simpleaudio as sa
 from tkinterdnd2 import DND_FILES, TkinterDnD
+from dataclasses import dataclass
 
 def get_window_size():
     root = tk.Tk()
@@ -9,6 +10,17 @@ def get_window_size():
     root.destroy()
     return (width, height)
 
+@dataclass(slots=True)
+class FrameUtils():
+    max_width: int = get_window_size()[0]
+    max_height: int = get_window_size()[1]
+    width: int = max_width // 2
+    height: int = max_height // 2
+    title: str = "AFU"
+    button_frame: tk.Frame = None
+    button_start: tk.Button = None
+    button_stop: tk.Button = None
+
 class AFU(TkinterDnD.Tk):
     def __init__(self):
         super().__init__()
@@ -16,32 +28,32 @@ class AFU(TkinterDnD.Tk):
         # ESC キーをバインド
         self.bind('<Escape>', lambda evnet: self.on_escape())
 
+        # Window クラスをインスタンス
+        self.window_utils = FrameUtils()
+
         # ウィンドウサイズ
-        (max_width, max_height) = get_window_size()
-        width = max_width // 2
-        height = max_height // 2
-        self.geometry(f'{width}x{height}')
-        self.minsize(width, height)
-        self.maxsize(max_width, max_height)
-        self.title(f'AFU')
+        self.geometry(f'{self.window_utils.width}x{self.window_utils.height}')
+        self.minsize(self.window_utils.width, self.window_utils.height)
+        self.maxsize(self.window_utils.max_width, self.window_utils.max_height)
+        self.title(self.window_utils.title)
 
         # 列要素の拡張対応
         self.columnconfigure(index=0, weight=0) # ボタンのフレームは固定
         self.columnconfigure(index=1, weight=1)
 
-        # ボタンフレーム
-        self.button_frame_top = tk.Frame(self)
-        self.button_frame_top.grid(row=0, column=0, padx=0, pady=5)
-
-        self.button_frame_top_start = tk.Button(self.button_frame_top, text="start", command=self.execute_start, width=20)
-        self.button_frame_top_start.pack(side=tk.TOP, padx=10)
-
-        self.button_frame_top_stop = tk.Button(self.button_frame_top, text="stop", command=self.execute_stop, width=20)
-        self.button_frame_top_stop.pack(side=tk.TOP, padx=10)
-
         ## Drag & Drop フレーム
-        self.drag_and_drop_frames_top = DragAndDropUtil(self)
-        self.drag_and_drop_frames_top.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+        self.drag_and_drop_frame = DragAndDropUtil(self)
+        self.drag_and_drop_frame.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+
+        # ボタンフレーム
+        self.window_utils.button_frame = tk.Frame(self)
+        self.window_utils.button_frame.grid(row=0, column=0, padx=0, pady=5)
+
+        self.window_utils.button_start = tk.Button(self.window_utils.button_frame, text="start", command=lambda: self.execute_start(self.drag_and_drop_frame.get_file_path()), width=20)
+        self.window_utils.button_start.pack(side=tk.TOP, padx=10)
+
+        self.window_utils.button_stop = tk.Button(self.window_utils.button_frame, text="stop", command=self.execute_stop, width=20)
+        self.window_utils.button_stop.pack(side=tk.TOP, padx=10)
 
         # ボタンフレーム
 #        self.button_frame_bottom = tk.Frame(self)
@@ -57,8 +69,8 @@ class AFU(TkinterDnD.Tk):
 #        self.drag_and_drop_frames_bottom = DragAndDropUtil(self)
 #        self.drag_and_drop_frames_bottom.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
-    def execute_start(self):
-        file_path = self.drag_and_drop_frames_top.get_file_path()
+    def execute_start(self, file_path_):
+        file_path = file_path_
         if file_path is not None:
             self.wave_obj = sa.WaveObject.from_wave_file(file_path)
             self.play_obj = self.wave_obj.play()
