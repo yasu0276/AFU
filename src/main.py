@@ -1,3 +1,4 @@
+from __future__ import annotations
 import tkinter as tk
 import simpleaudio as sa
 from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -11,15 +12,21 @@ def get_window_size():
     return (width, height)
 
 @dataclass(slots=True)
-class FrameUtils():
+class FrameObj():
     max_width: int = get_window_size()[0]
     max_height: int = get_window_size()[1]
     width: int = max_width // 2
     height: int = max_height // 2
     title: str = "AFU"
-    button_frame: tk.Frame = None
+    button: tk.Frame = None
     button_start: tk.Button = None
     button_stop: tk.Button = None
+    drag_and_drop: DragAndDropUtil = None
+
+@dataclass(slots=True)
+class AudioObj():
+    wave_obj: sa.WaveObject = None
+    play_obj: sa.PlayObject = None
 
 class AFU(TkinterDnD.Tk):
     def __init__(self):
@@ -28,56 +35,57 @@ class AFU(TkinterDnD.Tk):
         # ESC キーをバインド
         self.bind('<Escape>', lambda evnet: self.on_escape())
 
-        # Window クラスをインスタンス
-        self.window_utils = FrameUtils()
+        # クラスをインスタンス
+        self.frame_top = FrameObj()
+        self.wave_top = AudioObj()
+        self.frame_bottom = FrameObj()
+        self.wave_bottom = AudioObj()
 
         # ウィンドウサイズ
-        self.geometry(f'{self.window_utils.width}x{self.window_utils.height}')
-        self.minsize(self.window_utils.width, self.window_utils.height)
-        self.maxsize(self.window_utils.max_width, self.window_utils.max_height)
-        self.title(self.window_utils.title)
+        self.geometry(f'{self.frame_top.width}x{self.frame_top.height}')
+        self.minsize(self.frame_top.width, self.frame_top.height)
+        self.maxsize(self.frame_top.max_width, self.frame_top.max_height)
+        self.title(self.frame_top.title)
 
         # 列要素の拡張対応
         self.columnconfigure(index=0, weight=0) # ボタンのフレームは固定
         self.columnconfigure(index=1, weight=1)
 
-        ## Drag & Drop フレーム
-        self.drag_and_drop_frame = DragAndDropUtil(self)
-        self.drag_and_drop_frame.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+        # Drag & Drop フレーム
+        self.frame_top.drag_and_drop = DragAndDropUtil(self)
+        self.frame_top.drag_and_drop.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+
+        self.frame_bottom.drag_and_drop = DragAndDropUtil(self)
+        self.frame_bottom.drag_and_drop.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
         # ボタンフレーム
-        self.window_utils.button_frame = tk.Frame(self)
-        self.window_utils.button_frame.grid(row=0, column=0, padx=0, pady=5)
+        self.frame_top.button = tk.Frame(self)
+        self.frame_top.button.grid(row=0, column=0, padx=0, pady=5)
 
-        self.window_utils.button_start = tk.Button(self.window_utils.button_frame, text="start", command=lambda: self.execute_start(self.drag_and_drop_frame.get_file_path()), width=20)
-        self.window_utils.button_start.pack(side=tk.TOP, padx=10)
+        self.frame_top.button_start = tk.Button(self.frame_top.button, text="start", command=lambda: self.execute_start(self.frame_top, self.wave_top), width=20)
+        self.frame_top.button_start.pack(side=tk.TOP, padx=10)
 
-        self.window_utils.button_stop = tk.Button(self.window_utils.button_frame, text="stop", command=self.execute_stop, width=20)
-        self.window_utils.button_stop.pack(side=tk.TOP, padx=10)
+        self.frame_top.button_stop = tk.Button(self.frame_top.button, text="stop", command=lambda: self.execute_stop(self.wave_top), width=20)
+        self.frame_top.button_stop.pack(side=tk.TOP, padx=10)
 
-        # ボタンフレーム
-#        self.button_frame_bottom = tk.Frame(self)
-#        self.button_frame_bottom.grid(row=1, column=0, padx=0, pady=5)
-#
-#        self.button_frame_left = tk.Button(self.button_frame_bottom, text="start", command=self.execute_start, width=20)
-#        self.button_frame_left.pack(side=tk.TOP, padx=10)
-#
-#        self.button_frame_right = tk.Button(self.button_frame_bottom, text="stop", command=self.execute_stop, width=20)
-#        self.button_frame_right.pack(side=tk.TOP, padx=10)
-#
-#        ## Drag & Drop フレーム
-#        self.drag_and_drop_frames_bottom = DragAndDropUtil(self)
-#        self.drag_and_drop_frames_bottom.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
+        self.frame_bottom.button = tk.Frame(self)
+        self.frame_bottom.button.grid(row=1, column=0, padx=0, pady=5)
 
-    def execute_start(self, file_path_):
-        file_path = file_path_
+        self.frame_bottom.button_start = tk.Button(self.frame_bottom.button, text="start", command=lambda: self.execute_start(self.frame_bottom, self.wave_bottom), width=20)
+        self.frame_bottom.button_start.pack(side=tk.TOP, padx=10)
+
+        self.frame_bottom.button_stop = tk.Button(self.frame_bottom.button, text="stop", command=lambda: self.execute_stop(self.wave_bottom), width=20)
+        self.frame_bottom.button_stop.pack(side=tk.TOP, padx=10)
+
+    def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
+        file_path = frame_obj.drag_and_drop.get_file_path()
         if file_path is not None:
-            self.wave_obj = sa.WaveObject.from_wave_file(file_path)
-            self.play_obj = self.wave_obj.play()
+            audio_obj.wave_obj = sa.WaveObject.from_wave_file(file_path)
+            audio_obj.play_obj = audio_obj.wave_obj.play()
 
-    def execute_stop(self):
-        if self.play_obj.is_playing():
-            self.play_obj.stop()
+    def execute_stop(self, audio_obj: AudioObj):
+        if audio_obj.play_obj.is_playing():
+            audio_obj.play_obj.stop()
 
     def on_escape(self):
         self.quit()
