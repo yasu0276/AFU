@@ -51,7 +51,7 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller --onefile --windowed src/main.py --name ${{ matrix.output_name }} --collect-data tkinterdnd2 -y
+        pyinstaller --onefile --windowed src/main.py --name ${{ matrix.output_name }} --collect-data tkinterdnd2 --collect-data simpleaudio -y
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

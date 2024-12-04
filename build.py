@@ -16,13 +16,13 @@ if __name__=="__main__":
         output_path = "./dist/win"
         # ディレクトリが存在しない場合は作成
         if not os.path.exists(output_path): os.makedirs(output_path)
-        result = subprocess.run("pyinstaller --windowed --distpath={} --onefile --noconsole --name afu-windows.exe ./src/main.py --collect-data tkinterdnd2 -y".format(output_path), shell=True)
+        result = subprocess.run("pyinstaller --windowed --distpath={} --onefile --noconsole --name afu-windows.exe ./src/main.py --collect-data tkinterdnd2 --collect-data simpleaudio -y".format(output_path), shell=True)
     else:
         app_name = "{}-mac".format(app_name)
         output_path = "./dist/mac"
         # ディレクトリが存在しない場合は作成
         if not os.path.exists(output_path): os.makedirs(output_path)
-        result = subprocess.run(["pyinstaller --windowed --distpath={} --onefile --noconsole --name afu-macos ./src/main.py --collect-data tkinterdnd2 -y".format(output_path)], shell=True)
+        result = subprocess.run(["pyinstaller --windowed --distpath={} --onefile --noconsole --name afu-macos ./src/main.py --collect-data tkinterdnd2 --collect-data simpleaudio -y".format(output_path)], shell=True)
 
     if (result.returncode != 0):
         print("** build error **")

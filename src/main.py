@@ -3,6 +3,7 @@ import tkinter as tk
 import simpleaudio as sa
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from dataclasses import dataclass
+from collections import deque
 
 def get_window_size():
     root = tk.Tk()
@@ -26,7 +27,7 @@ class FrameObj():
 @dataclass(slots=True)
 class AudioObj():
     wave_obj: sa.WaveObject = None
-    play_obj: sa.PlayObject = None
+    play_obj_que: deque = deque()
 
 class AFU(TkinterDnD.Tk):
     def __init__(self):
@@ -50,6 +51,10 @@ class AFU(TkinterDnD.Tk):
         # 列要素の拡張対応
         self.columnconfigure(index=0, weight=0) # ボタンのフレームは固定
         self.columnconfigure(index=1, weight=1)
+
+        # 行要素の拡張対応
+        self.rowconfigure(index=0, weight=1)
+        self.rowconfigure(index=1, weight=1)
 
         # Drag & Drop フレーム
         self.frame_top.drag_and_drop = DragAndDropUtil(self)
@@ -81,11 +86,13 @@ class AFU(TkinterDnD.Tk):
         file_path = frame_obj.drag_and_drop.get_file_path()
         if file_path is not None:
             audio_obj.wave_obj = sa.WaveObject.from_wave_file(file_path)
-            audio_obj.play_obj = audio_obj.wave_obj.play()
+            play_obj = audio_obj.wave_obj.play()
+            audio_obj.play_obj_que.append(play_obj)
 
     def execute_stop(self, audio_obj: AudioObj):
-        if audio_obj.play_obj.is_playing():
-            audio_obj.play_obj.stop()
+        play_obj = audio_obj.play_obj_que.popleft()
+        if play_obj.is_playing():
+            play_obj.stop()
 
     def on_escape(self):
         self.quit()
