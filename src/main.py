@@ -33,14 +33,23 @@ class AFU(TkinterDnD.Tk):
     def __init__(self):
         super().__init__()
 
+        # ウインドウに強制フォーカス
+        self.focus_force()
+
         # ESC キーをバインド
         self.bind('<Escape>', lambda evnet: self.on_escape())
 
+        # space キーをバインド
+        self.bind('<space>', lambda evnet: self.on_all_start())
+
+        # Shift + space キーをバインド
+        self.bind('<Shift-space>', lambda evnet: self.on_all_stop())
+
         # クラスをインスタンス
         self.frame_top = FrameObj()
-        self.wave_top = AudioObj()
+        self.audio_top = AudioObj()
         self.frame_bottom = FrameObj()
-        self.wave_bottom = AudioObj()
+        self.audio_bottom = AudioObj()
 
         # ウィンドウサイズ
         self.geometry(f'{self.frame_top.width}x{self.frame_top.height}')
@@ -67,19 +76,19 @@ class AFU(TkinterDnD.Tk):
         self.frame_top.button = tk.Frame(self)
         self.frame_top.button.grid(row=0, column=0, padx=0, pady=5)
 
-        self.frame_top.button_start = tk.Button(self.frame_top.button, text="start", command=lambda: self.execute_start(self.frame_top, self.wave_top), width=20)
+        self.frame_top.button_start = tk.Button(self.frame_top.button, text="start", command=lambda: self.execute_start(self.frame_top, self.audio_top), width=20)
         self.frame_top.button_start.pack(side=tk.TOP, padx=10)
 
-        self.frame_top.button_stop = tk.Button(self.frame_top.button, text="stop", command=lambda: self.execute_stop(self.wave_top), width=20)
+        self.frame_top.button_stop = tk.Button(self.frame_top.button, text="stop", command=lambda: self.execute_stop(self.audio_top), width=20)
         self.frame_top.button_stop.pack(side=tk.TOP, padx=10)
 
         self.frame_bottom.button = tk.Frame(self)
         self.frame_bottom.button.grid(row=1, column=0, padx=0, pady=5)
 
-        self.frame_bottom.button_start = tk.Button(self.frame_bottom.button, text="start", command=lambda: self.execute_start(self.frame_bottom, self.wave_bottom), width=20)
+        self.frame_bottom.button_start = tk.Button(self.frame_bottom.button, text="start", command=lambda: self.execute_start(self.frame_bottom, self.audio_bottom), width=20)
         self.frame_bottom.button_start.pack(side=tk.TOP, padx=10)
 
-        self.frame_bottom.button_stop = tk.Button(self.frame_bottom.button, text="stop", command=lambda: self.execute_stop(self.wave_bottom), width=20)
+        self.frame_bottom.button_stop = tk.Button(self.frame_bottom.button, text="stop", command=lambda: self.execute_stop(self.audio_bottom), width=20)
         self.frame_bottom.button_stop.pack(side=tk.TOP, padx=10)
 
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
@@ -96,6 +105,14 @@ class AFU(TkinterDnD.Tk):
 
     def on_escape(self):
         self.quit()
+
+    def on_all_start(self):
+        self.execute_start(self.frame_top, self.audio_top)
+        self.execute_start(self.frame_bottom, self.audio_bottom)
+
+    def on_all_stop(self):
+        self.execute_stop(self.audio_top)
+        self.execute_stop(self.audio_bottom)
 
 class DragAndDropUtil(tk.LabelFrame):
     def __init__(self, parent):
