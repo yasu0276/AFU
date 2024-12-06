@@ -1,33 +1,4 @@
-from __future__ import annotations
-import tkinter as tk
-import simpleaudio as sa
-from tkinterdnd2 import DND_FILES, TkinterDnD
-from dataclasses import dataclass
-from collections import deque
-
-def get_window_size():
-    root = tk.Tk()
-    width = root.winfo_screenwidth()
-    height = root.winfo_screenheight()
-    root.destroy()
-    return (width, height)
-
-@dataclass(slots=True)
-class FrameObj():
-    max_width: int = get_window_size()[0]
-    max_height: int = get_window_size()[1]
-    width: int = max_width // 2
-    height: int = max_height // 2
-    title: str = "AFU"
-    button: tk.Frame = None
-    button_start: tk.Button = None
-    button_stop: tk.Button = None
-    drag_and_drop: DragAndDropUtil = None
-
-@dataclass(slots=True)
-class AudioObj():
-    wave_obj: sa.WaveObject = None
-    play_obj_que: deque = deque()
+from utils import *
 
 class AFU(TkinterDnD.Tk):
     def __init__(self):
@@ -113,41 +84,6 @@ class AFU(TkinterDnD.Tk):
     def on_all_stop(self):
         self.execute_stop(self.audio_top)
         self.execute_stop(self.audio_bottom)
-
-class DragAndDropUtil(tk.LabelFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.textbox = tk.Text(self)
-        self.textbox.insert(0.0, "Drag and Drop File.")
-        self.textbox.configure(state='disabled')
-
-        ## ドラッグアンドドロップ
-        self.textbox.drop_target_register(DND_FILES)
-        self.textbox.dnd_bind('<<Drop>>', self.execute_drag_and_drop)
-
-        ## スクロールバー設定
-        self.scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.textbox.yview)
-        self.textbox['yscrollcommand'] = self.scrollbar.set
-
-        ## 配置
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.textbox.grid(row=0, column=0, sticky='ewns')
-        self.scrollbar.grid(row=0, column=1, sticky='ewns')
-
-        # ファイルパス記憶変数
-        self.file_path = None
-
-    def execute_drag_and_drop(self, e) -> None:
-        ## ここを編集してください
-        self.textbox.config(state="normal")
-        self.textbox.delete("1.0", tk.END)
-        self.textbox.insert(tk.END, e.data)
-        self.textbox.configure(state="disabled")
-        self.file_path = e.data
-
-    def get_file_path(self) -> str :
-        return (self.file_path)
 
 if __name__ == "__main__":
     app = AFU()
