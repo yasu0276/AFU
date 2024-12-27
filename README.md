@@ -2,10 +2,9 @@
 
 
 ## 依存ライブラリ
-TkEasyGUI と simpleaudio を使用しています。
-また、実行ファイルのビルドのため Pyinstaller を使用しています。
-インストールする際は以下のコマンドを実行してください。
+wave ファイル再生のために simpleaudio と wave を使用しています。
+また、GUI には Tkinter を使用しています。ドラッグ＆ドロップの拡張のため tkinterdnd2 を使用しています。詳細は requirements.txt を参照してください。
+依存ライブラリを一括でインストールする際は以下のコマンドを実行してください。
 ```
-python -m pip install TkEasyGUI
-python -m pip install Pyinstaller
+pip install -r requirements.txt
 ```

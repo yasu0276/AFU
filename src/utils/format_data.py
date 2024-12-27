@@ -1,9 +1,11 @@
 from __future__ import annotations
-import tkinter as tk
-import simpleaudio as sa
 from dataclasses import dataclass
 from collections import deque
 from .ui_component import *
+import tkinter as tk
+import simpleaudio as sa
+import numpy as np
+import wave
 
 def get_window_size():
     root = tk.Tk()
@@ -26,5 +28,6 @@ class FrameObj():
 
 @dataclass(slots=True)
 class AudioObj():
-    wave_obj: sa.WaveObject = None
+    wave_obj: wave.Wave_read = None
+    audio_buffer: np.array = None
     play_obj_que: deque = deque()

@@ -65,8 +65,15 @@ class AFU(TkinterDnD.Tk):
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
         file_path = frame_obj.drag_and_drop.get_file_path()
         if file_path is not None:
-            audio_obj.wave_obj = sa.WaveObject.from_wave_file(file_path)
-            play_obj = audio_obj.wave_obj.play()
+            audio_obj.wave_obj = wave.open(file_path, 'rb')
+            audio_frame = audio_obj.wave_obj.readframes(audio_obj.wave_obj.getnframes())
+            audio_data = np.frombuffer(audio_frame, dtype=np.int16)
+            play_obj = sa.play_buffer(
+                audio_data.tobytes(),
+                num_channels=audio_obj.wave_obj.getnchannels(),
+                bytes_per_sample=audio_obj.wave_obj.getsampwidth(),
+                sample_rate=audio_obj.wave_obj.getframerate()
+            )
             audio_obj.play_obj_que.append(play_obj)
 
     def execute_stop(self, audio_obj: AudioObj):
