@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections import deque
 from .ui_component import *
 import tkinter as tk
@@ -30,4 +30,4 @@ class FrameObj():
 class AudioObj():
     wave_obj: wave.Wave_read = None
     audio_buffer: np.array = None
-    play_obj_que: deque = deque()
+    play_obj_que: deque = field(default_factory=deque)
