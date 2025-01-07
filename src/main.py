@@ -63,18 +63,13 @@ class AFU(TkinterDnD.Tk):
         self.frame_bottom.button_stop.pack(side=tk.TOP, padx=10)
 
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
-        file_path = frame_obj.drag_and_drop.get_file_path()
-        if file_path is not None:
-            audio_obj.wave_obj = wave.open(file_path, 'rb')
-            audio_frame = audio_obj.wave_obj.readframes(audio_obj.wave_obj.getnframes())
-            audio_data = np.frombuffer(audio_frame, dtype=np.int16)
-            play_obj = sa.play_buffer(
-                audio_data.tobytes(),
-                num_channels=audio_obj.wave_obj.getnchannels(),
-                bytes_per_sample=audio_obj.wave_obj.getsampwidth(),
-                sample_rate=audio_obj.wave_obj.getframerate()
-            )
-            audio_obj.play_obj_que.append(play_obj)
+        play_obj = sa.play_buffer(
+            audio_obj.audio_buffer.tobytes(),
+            audio_obj.wave_obj.getnchannels(),
+            audio_obj.wave_obj.getsampwidth(),
+            audio_obj.wave_obj.getframerate()
+        )
+        audio_obj.play_obj_que.append(play_obj)
 
     def execute_stop(self, audio_obj: AudioObj):
         play_obj = audio_obj.play_obj_que.popleft()
@@ -91,6 +86,19 @@ class AFU(TkinterDnD.Tk):
     def on_all_stop(self):
         self.execute_stop(self.audio_top)
         self.execute_stop(self.audio_bottom)
+
+    def notify(self, child, file_path):
+        # 子クラス（ドラッグ＆ドロップフレーム）からの通知でオーディオファイルを解析
+        if file_path is not None:
+            # 子クラスの生成 ID からどのフレームか特定してオーディオオブジェクトをキャッシュ
+            if (child == self.frame_top.drag_and_drop):
+                audio_obj = self.audio_top
+            if (child == self.frame_bottom.drag_and_drop):
+                audio_obj = self.audio_bottom
+            # オーディオファイルの解析
+            audio_obj.wave_obj = wave.open(file_path, 'rb')
+            audio_frame = audio_obj.wave_obj.readframes(audio_obj.wave_obj.getnframes())
+            audio_obj.audio_buffer = np.frombuffer(audio_frame, dtype=np.int16)
 
 if __name__ == "__main__":
     app = AFU()

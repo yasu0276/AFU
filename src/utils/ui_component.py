@@ -23,18 +23,30 @@ class DragAndDropUtil(tk.LabelFrame):
         self.textbox.grid(row=0, column=0, sticky='ewns')
         self.scrollbar.grid(row=0, column=1, sticky='ewns')
 
+        # 親クラスにドラッグ＆ドロップされたファイルを通知するために記録しておく
+        self.parent = parent
+
         # ファイルパス記憶変数
         self.file_path = None
+        self.__file_path = None
 
     def execute_drag_and_drop(self, e) -> None:
-        ## ここを編集してください
+        # ここを編集してください
         self.textbox.config(state="normal")
         self.textbox.delete("1.0", tk.END)
         self.textbox.insert(tk.END, e.data)
         self.textbox.configure(state="disabled")
+        # ファイルパスを記録
         self.file_path = e.data
         # ドラッグ＆ドロップした後にフォーカスが外れるので強制フォーカス
         self.focus_force()
 
-    def get_file_path(self) -> str :
-        return (self.file_path)
+    @property
+    def file_path(self) -> str:
+        return self.__file_path
+
+    @file_path.setter
+    def file_path(self, file_path):
+        self.__file_path = file_path
+        if self.parent:
+            self.parent.notify(self, self.__file_path)
