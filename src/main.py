@@ -65,16 +65,18 @@ class AFU(TkinterDnD.Tk):
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
         play_obj = sa.play_buffer(
             audio_obj.audio_buffer.tobytes(),
-            audio_obj.wave_obj.getnchannels(),
-            audio_obj.wave_obj.getsampwidth(),
-            audio_obj.wave_obj.getframerate()
+            audio_obj.num_channels,
+            audio_obj.bytes_to_sample,
+            audio_obj.sample_rate
         )
         audio_obj.play_obj_que.append(play_obj)
 
     def execute_stop(self, audio_obj: AudioObj):
-        play_obj = audio_obj.play_obj_que.popleft()
-        if play_obj.is_playing():
-            play_obj.stop()
+        try:
+            play_obj = audio_obj.play_obj_que.popleft()
+            if play_obj.is_playing(): play_obj.stop()
+        except IndexError:
+            pass
 
     def on_escape(self):
         self.quit()
@@ -99,6 +101,9 @@ class AFU(TkinterDnD.Tk):
             audio_obj.wave_obj = wave.open(file_path, 'rb')
             audio_frame = audio_obj.wave_obj.readframes(audio_obj.wave_obj.getnframes())
             audio_obj.audio_buffer = np.frombuffer(audio_frame, dtype=np.int16)
+            audio_obj.num_channels = audio_obj.wave_obj.getnchannels()
+            audio_obj.bytes_to_sample = audio_obj.wave_obj.getsampwidth()
+            audio_obj.sample_rate = audio_obj.wave_obj.getframerate()
 
 if __name__ == "__main__":
     app = AFU()

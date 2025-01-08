@@ -28,6 +28,33 @@ class FrameObj():
 
 @dataclass(slots=True)
 class AudioObj():
+    _num_channels: int = 0
+    _bytes_to_sample: int = 0
+    _sample_rate: int = 0
     wave_obj: wave.Wave_read = None
     audio_buffer: np.array = None
     play_obj_que: deque = field(default_factory=deque)
+
+    @property
+    def num_channels(self):
+        return self._num_channels
+
+    @num_channels.setter
+    def num_channels(self, value):
+        self._num_channels = value
+
+    @property
+    def bytes_to_sample(self):
+        return self._bytes_to_sample
+
+    @bytes_to_sample.setter
+    def bytes_to_sample(self, value):
+        self._bytes_to_sample = value
+
+    @property
+    def sample_rate(self):
+        return self._sample_rate
+
+    @sample_rate.setter
+    def sample_rate(self, value):
+        self._sample_rate = value
