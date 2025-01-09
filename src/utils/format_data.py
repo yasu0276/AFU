@@ -21,10 +21,20 @@ class FrameObj():
     width: int = max_width // 2
     height: int = max_height // 2
     title: str = "AFU"
+    _file_path: str = None
     button: tk.Frame = None
     button_start: tk.Button = None
     button_stop: tk.Button = None
+    button_to_txt: tk.Button = None
     drag_and_drop: DragAndDropUtil = None
+
+    @property
+    def file_path(self):
+        return self._file_path
+
+    @file_path.setter
+    def file_path(self, value):
+        self._file_path = value
 
 @dataclass(slots=True)
 class AudioObj():

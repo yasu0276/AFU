@@ -53,6 +53,10 @@ class AFU(TkinterDnD.Tk):
         self.frame_top.button_stop = tk.Button(self.frame_top.button, text="stop", command=lambda: self.execute_stop(self.audio_top), width=20)
         self.frame_top.button_stop.pack(side=tk.TOP, padx=10)
 
+        self.frame_top.button_to_txt = tk.Button(self.frame_top.button, text="to txt", command=lambda: self.to_txt(self.frame_top, self.audio_top), width=20)
+        self.frame_top.button_to_txt.pack(side=tk.TOP, padx=10)
+
+        self.frame_top.button_stop.pack(side=tk.TOP, padx=10)
         self.frame_bottom.button = tk.Frame(self)
         self.frame_bottom.button.grid(row=1, column=0, padx=0, pady=5)
 
@@ -61,6 +65,9 @@ class AFU(TkinterDnD.Tk):
 
         self.frame_bottom.button_stop = tk.Button(self.frame_bottom.button, text="stop", command=lambda: self.execute_stop(self.audio_bottom), width=20)
         self.frame_bottom.button_stop.pack(side=tk.TOP, padx=10)
+
+        self.frame_bottom.button_to_txt = tk.Button(self.frame_bottom.button, text="to txt", command=lambda: self.to_txt(self.frame_bottom, self.audio_bottom), width=20)
+        self.frame_bottom.button_to_txt.pack(side=tk.TOP, padx=10)
 
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
         play_obj = sa.play_buffer(
@@ -89,21 +96,32 @@ class AFU(TkinterDnD.Tk):
         self.execute_stop(self.audio_top)
         self.execute_stop(self.audio_bottom)
 
+    def to_txt(self, frame_obj: FrameObj, audio_obj: AudioObj):
+        if frame_obj.file_path is not None:
+            print(frame_obj.file_path)
+
     def notify(self, child, file_path):
         # 子クラス（ドラッグ＆ドロップフレーム）からの通知でオーディオファイルを解析
         if file_path is not None:
-            # 子クラスの生成 ID からどのフレームか特定してオーディオオブジェクトをキャッシュ
+            # 子クラスの生成 ID からどのフレームか特定
             if (child == self.frame_top.drag_and_drop):
                 audio_obj = self.audio_top
+                frame_obj = self.frame_top
             if (child == self.frame_bottom.drag_and_drop):
                 audio_obj = self.audio_bottom
-            # オーディオファイルの解析
+                frame_obj = self.frame_bottom
+            # ファイルパスの記録
+            frame_obj.file_path = file_path
+            # 波形データの読み込み
             audio_obj.wave_obj = wave.open(file_path, 'rb')
             audio_frame = audio_obj.wave_obj.readframes(audio_obj.wave_obj.getnframes())
-            audio_obj.audio_buffer = np.frombuffer(audio_frame, dtype=np.int16)
+            # メタデータの取得
             audio_obj.num_channels = audio_obj.wave_obj.getnchannels()
             audio_obj.bytes_to_sample = audio_obj.wave_obj.getsampwidth()
             audio_obj.sample_rate = audio_obj.wave_obj.getframerate()
+            # サンプル幅からデータ型を特定
+            audio_dtype = np.int16 if audio_obj.bytes_to_sample == 2 else np.uint8
+            audio_obj.audio_buffer = np.frombuffer(audio_frame, dtype=audio_dtype)
 
 if __name__ == "__main__":
     app = AFU()
