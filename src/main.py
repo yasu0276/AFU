@@ -97,8 +97,27 @@ class AFU(TkinterDnD.Tk):
         self.execute_stop(self.audio_bottom)
 
     def to_txt(self, frame_obj: FrameObj, audio_obj: AudioObj):
-        if frame_obj.file_path is not None:
-            print(frame_obj.file_path)
+        # ファイルパスとオーディオバッファが取得できなければ何もしない
+        if frame_obj.file_path is None:
+            return
+        if audio_obj.audio_buffer is None:
+            return
+
+        save_file_path = frame_obj.file_path.replace(".wav", ".csv")
+        with open(save_file_path, "w") as file_ptr:
+            file_ptr.write(f"Number of Channels, {audio_obj.num_channels}\n")
+            file_ptr.write(f"Bytes per Sample, {audio_obj.bytes_to_sample}\n")
+            file_ptr.write(f"Sample Rate, {audio_obj.sample_rate}\n")
+
+            # ステレオの場合、各チャンネルを分離
+            audio_data = audio_obj.audio_buffer
+            if audio_obj.num_channels > 1:
+                audio_data = audio_data.reshape(-1, audio_obj.num_channels)
+            else:
+                audio_data = audio_data.reshape(-1, 1)
+
+            # 各チャンネルのバッファーを書き出し
+            [file_ptr.write(f"{ch}ch, " + ",".join(map(str, audio_data[:, ch])) + "\n") for ch in range(0, audio_obj.num_channels)]
 
     def notify(self, child, file_path):
         # 子クラス（ドラッグ＆ドロップフレーム）からの通知でオーディオファイルを解析
