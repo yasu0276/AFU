@@ -1,8 +1,28 @@
 from utils import *
 
+def write_csv(file_path: str, audio_obj: AudioObj):
+    with open(file_path, "w") as file_ptr:
+        file_ptr.write(f"Number of Channels, {audio_obj.num_channels}\n")
+        file_ptr.write(f"Bytes per Sample, {audio_obj.bytes_to_sample}\n")
+        file_ptr.write(f"Sample Rate, {audio_obj.sample_rate}\n")
+
+        # ステレオの場合、各チャンネルを分離
+        audio_data = audio_obj.audio_buffer
+        if audio_obj.num_channels > 1:
+            audio_data = audio_data.reshape(-1, audio_obj.num_channels)
+        else:
+            audio_data = audio_data.reshape(-1, 1)
+
+        # 各チャンネルのバッファーを書き出し
+        [file_ptr.write(f"{ch}ch, " + ",".join(map(str, audio_data[:, ch])) + "\n") for ch in range(0, audio_obj.num_channels)]
+
 class AFU(TkinterDnD.Tk):
     def __init__(self):
         super().__init__()
+
+        # メニューバー
+        self.menubar = tk.Menu(self)
+        self.config(menu=self.menubar)
 
         # ウインドウに強制フォーカス
         self.focus_force()
@@ -53,9 +73,6 @@ class AFU(TkinterDnD.Tk):
         self.frame_top.button_stop = tk.Button(self.frame_top.button, text="stop", command=lambda: self.execute_stop(self.audio_top), width=20)
         self.frame_top.button_stop.pack(side=tk.TOP, padx=10)
 
-        self.frame_top.button_to_txt = tk.Button(self.frame_top.button, text="to txt", command=lambda: self.to_txt(self.frame_top, self.audio_top), width=20)
-        self.frame_top.button_to_txt.pack(side=tk.TOP, padx=10)
-
         self.frame_top.button_stop.pack(side=tk.TOP, padx=10)
         self.frame_bottom.button = tk.Frame(self)
         self.frame_bottom.button.grid(row=1, column=0, padx=0, pady=5)
@@ -66,8 +83,15 @@ class AFU(TkinterDnD.Tk):
         self.frame_bottom.button_stop = tk.Button(self.frame_bottom.button, text="stop", command=lambda: self.execute_stop(self.audio_bottom), width=20)
         self.frame_bottom.button_stop.pack(side=tk.TOP, padx=10)
 
-        self.frame_bottom.button_to_txt = tk.Button(self.frame_bottom.button, text="to txt", command=lambda: self.to_txt(self.frame_bottom, self.audio_bottom), width=20)
-        self.frame_bottom.button_to_txt.pack(side=tk.TOP, padx=10)
+        # ファイルメニュー
+        self.file_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="ファイル", menu=self.file_menu)
+        self.file_menu.add_command(label="終了 (ESC) ", command=self.quit)
+
+        # 編集メニュー
+        self.edit_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="編集", menu=self.edit_menu)
+        self.edit_menu.add_command(label="csv 変換 ", command=self.to_txt)
 
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
         play_obj = sa.play_buffer(
@@ -96,28 +120,12 @@ class AFU(TkinterDnD.Tk):
         self.execute_stop(self.audio_top)
         self.execute_stop(self.audio_bottom)
 
-    def to_txt(self, frame_obj: FrameObj, audio_obj: AudioObj):
+    def to_txt(self):
         # ファイルパスとオーディオバッファが取得できなければ何もしない
-        if frame_obj.file_path is None:
-            return
-        if audio_obj.audio_buffer is None:
-            return
-
-        save_file_path = frame_obj.file_path.replace(".wav", ".csv")
-        with open(save_file_path, "w") as file_ptr:
-            file_ptr.write(f"Number of Channels, {audio_obj.num_channels}\n")
-            file_ptr.write(f"Bytes per Sample, {audio_obj.bytes_to_sample}\n")
-            file_ptr.write(f"Sample Rate, {audio_obj.sample_rate}\n")
-
-            # ステレオの場合、各チャンネルを分離
-            audio_data = audio_obj.audio_buffer
-            if audio_obj.num_channels > 1:
-                audio_data = audio_data.reshape(-1, audio_obj.num_channels)
-            else:
-                audio_data = audio_data.reshape(-1, 1)
-
-            # 各チャンネルのバッファーを書き出し
-            [file_ptr.write(f"{ch}ch, " + ",".join(map(str, audio_data[:, ch])) + "\n") for ch in range(0, audio_obj.num_channels)]
+        if self.frame_top.file_path is not None:
+            write_csv(self.frame_top.file_path.replace(".wav", ".csv"), self.audio_top)
+        if self.frame_bottom.file_path is not None:
+            write_csv(self.frame_bottom.file_path.replace(".wav", ".csv"), self.audio_bottom)
 
     def notify(self, child, file_path):
         # 子クラス（ドラッグ＆ドロップフレーム）からの通知でオーディオファイルを解析

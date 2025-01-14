@@ -25,7 +25,6 @@ class FrameObj():
     button: tk.Frame = None
     button_start: tk.Button = None
     button_stop: tk.Button = None
-    button_to_txt: tk.Button = None
     drag_and_drop: DragAndDropUtil = None
 
     @property
