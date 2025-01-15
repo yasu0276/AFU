@@ -31,15 +31,16 @@ class DragAndDropUtil(tk.LabelFrame):
         self.__file_path = None
 
     def execute_drag_and_drop(self, e) -> None:
-        # ここを編集してください
-        self.textbox.config(state="normal")
-        self.textbox.delete("1.0", tk.END)
-        self.textbox.insert(tk.END, e.data)
-        self.textbox.configure(state="disabled")
         # ファイルパスを記録
         self.file_path = e.data
         # ドラッグ＆ドロップした後にフォーカスが外れるので強制フォーカス
         self.focus_force()
+
+    def write_content(self, content: str) -> None:
+        self.textbox.config(state="normal")
+        self.textbox.delete("1.0", tk.END)
+        self.textbox.insert(tk.END, content)
+        self.textbox.configure(state="disabled")
 
     @property
     def file_path(self) -> str:

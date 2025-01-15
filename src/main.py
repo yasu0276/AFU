@@ -134,9 +134,11 @@ class AFU(TkinterDnD.Tk):
             if (child == self.frame_top.drag_and_drop):
                 audio_obj = self.audio_top
                 frame_obj = self.frame_top
+                drag_and_drop_obj = self.frame_top.drag_and_drop
             if (child == self.frame_bottom.drag_and_drop):
                 audio_obj = self.audio_bottom
                 frame_obj = self.frame_bottom
+                drag_and_drop_obj = self.frame_bottom.drag_and_drop
             # ファイルパスの記録
             frame_obj.file_path = file_path
             # 波形データの読み込み
@@ -149,6 +151,12 @@ class AFU(TkinterDnD.Tk):
             # サンプル幅からデータ型を特定
             audio_dtype = np.int16 if audio_obj.bytes_to_sample == 2 else np.uint8
             audio_obj.audio_buffer = np.frombuffer(audio_frame, dtype=audio_dtype)
+
+            content =  f"File Path, {file_path}\n"
+            content +=  f"Number of Channels, {audio_obj.num_channels}\n"
+            content +=  f"Bytes per Sample, {audio_obj.bytes_to_sample}\n"
+            content +=  f"Sample Rate, {audio_obj.sample_rate}\n"
+            drag_and_drop_obj.write_content(content)
 
 if __name__ == "__main__":
     app = AFU()
