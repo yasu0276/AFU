@@ -1,4 +1,5 @@
 from utils import *
+import matplotlib.pyplot as plt
 
 def write_csv(file_path: str, audio_obj: AudioObj):
     with open(file_path, "w") as file_ptr:
@@ -6,12 +7,7 @@ def write_csv(file_path: str, audio_obj: AudioObj):
         file_ptr.write(f"Bytes per Sample, {audio_obj.bytes_to_sample}\n")
         file_ptr.write(f"Sample Rate, {audio_obj.sample_rate}\n")
 
-        # ステレオの場合、各チャンネルを分離
         audio_data = audio_obj.audio_buffer
-        if audio_obj.num_channels > 1:
-            audio_data = audio_data.reshape(-1, audio_obj.num_channels)
-        else:
-            audio_data = audio_data.reshape(-1, 1)
 
         # 各チャンネルのバッファーを書き出し
         [file_ptr.write(f"{ch}ch, " + ",".join(map(str, audio_data[:, ch])) + "\n") for ch in range(0, audio_obj.num_channels)]
@@ -148,15 +144,38 @@ class AFU(TkinterDnD.Tk):
             audio_obj.num_channels = audio_obj.wave_obj.getnchannels()
             audio_obj.bytes_to_sample = audio_obj.wave_obj.getsampwidth()
             audio_obj.sample_rate = audio_obj.wave_obj.getframerate()
+
             # サンプル幅からデータ型を特定
             audio_dtype = np.int16 if audio_obj.bytes_to_sample == 2 else np.uint8
             audio_obj.audio_buffer = np.frombuffer(audio_frame, dtype=audio_dtype)
 
+            # 各チャンネルを分離
+            audio_obj.audio_buffer = audio_obj.audio_buffer.reshape(-1, audio_obj.num_channels)
+
+            # メタデータの書き出し
             content =  f"File Path, {file_path}\n"
             content +=  f"Number of Channels, {audio_obj.num_channels}\n"
             content +=  f"Bytes per Sample, {audio_obj.bytes_to_sample}\n"
             content +=  f"Sample Rate, {audio_obj.sample_rate}\n"
             drag_and_drop_obj.write_content(content)
+
+            # 音声波形をプロット
+            audio_data = audio_obj.audio_buffer
+            title = file_path.replace(".wav", "")
+            save_file_path = file_path.replace(".wav", "")
+            duration = len(audio_data) / audio_obj.sample_rate
+            times = np.linspace(0, duration, len(audio_data))
+            # カラーマップから色を取得
+            colors = plt.cm.viridis(np.linspace(0, 1, audio_obj.num_channels))
+            plt.figure(figsize=(10, 6))
+            [plt.plot(times, audio_data[:, i], color=colors[i], label=f"{i} ch") for i in range(0, audio_obj.num_channels, 1)]
+            plt.title(f"{title}")
+            plt.xlabel("Times [s]")
+            plt.ylabel("Amplitude")
+            plt.grid()
+            plt.legend()
+            plt.savefig(f"{save_file_path}", dpi=300)
+            plt.close()
 
 if __name__ == "__main__":
     app = AFU()
