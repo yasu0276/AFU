@@ -26,6 +26,7 @@ class FrameObj():
     button_start: tk.Button = None
     button_stop: tk.Button = None
     drag_and_drop: DragAndDropUtil = None
+    image: PhotoImage = None
 
     @property
     def file_path(self):

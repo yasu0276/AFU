@@ -53,13 +53,13 @@ class AFU(TkinterDnD.Tk):
         self.rowconfigure(index=1, weight=1)
 
         # Drag & Drop フレーム
-        self.frame_top.drag_and_drop = DragAndDropUtil(self)
+        self.frame_top.drag_and_drop = DragAndDropUtil(self, width=50, height=100)
         self.frame_top.drag_and_drop.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
 
-        self.frame_bottom.drag_and_drop = DragAndDropUtil(self)
+        self.frame_bottom.drag_and_drop = DragAndDropUtil(self, width=50, height=100)
         self.frame_bottom.drag_and_drop.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
-        # ボタンフレーム
+        # ボタンフレーム Top
         self.frame_top.button = tk.Frame(self)
         self.frame_top.button.grid(row=0, column=0, padx=0, pady=5)
 
@@ -73,6 +73,7 @@ class AFU(TkinterDnD.Tk):
         self.frame_bottom.button = tk.Frame(self)
         self.frame_bottom.button.grid(row=1, column=0, padx=0, pady=5)
 
+        # ボタンフレーム Bottom
         self.frame_bottom.button_start = tk.Button(self.frame_bottom.button, text="start", command=lambda: self.execute_start(self.frame_bottom, self.audio_bottom), width=20)
         self.frame_bottom.button_start.pack(side=tk.TOP, padx=10)
 
@@ -162,7 +163,7 @@ class AFU(TkinterDnD.Tk):
             # 音声波形をプロット
             audio_data = audio_obj.audio_buffer
             title = file_path.replace(".wav", "")
-            save_file_path = file_path.replace(".wav", "")
+            save_file_path = file_path.replace(".wav", ".png")
             duration = len(audio_data) / audio_obj.sample_rate
             times = np.linspace(0, duration, len(audio_data))
             # カラーマップから色を取得
@@ -176,6 +177,11 @@ class AFU(TkinterDnD.Tk):
             plt.legend()
             plt.savefig(f"{save_file_path}", dpi=300)
             plt.close()
+
+            # 画像の読み込み、Text エリアに表示
+            image = Image.open(save_file_path)
+            frame_obj.image = ImageTk.PhotoImage(image.resize((frame_obj.drag_and_drop.width * 10, frame_obj.drag_and_drop.height * 10)))
+            drag_and_drop_obj.write_image(frame_obj.image)
 
 if __name__ == "__main__":
     app = AFU()

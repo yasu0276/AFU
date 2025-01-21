@@ -1,11 +1,15 @@
 from __future__ import annotations
 import tkinter as tk
 from tkinterdnd2 import DND_FILES, TkinterDnD
+from PIL import Image, ImageTk
+from tkinter import PhotoImage
 
 class DragAndDropUtil(tk.LabelFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, width=50, height=50):
         super().__init__(parent)
-        self.textbox = tk.Text(self)
+        self.textbox = tk.Text(self, width=width, height=height)
+        self.__width = width
+        self.__height = height
         self.textbox.insert(0.0, "Drag and Drop File.")
         self.textbox.configure(state='disabled')
 
@@ -42,6 +46,13 @@ class DragAndDropUtil(tk.LabelFrame):
         self.textbox.insert(tk.END, content)
         self.textbox.configure(state="disabled")
 
+    def write_image(self, image: PhotoImage) -> None:
+        self.textbox.config(state="normal")
+        self.textbox.delete("1.0", tk.END)
+        self.textbox.insert("1.0", "\n")
+        self.textbox.image_create("1.0", image=image)
+        self.textbox.configure(state="disabled")
+
     @property
     def file_path(self) -> str:
         return self.__file_path
@@ -51,3 +62,11 @@ class DragAndDropUtil(tk.LabelFrame):
         self.__file_path = file_path
         if self.parent:
             self.parent.notify(self, self.__file_path)
+
+    @property
+    def width(self) -> int:
+        return self.__width
+
+    @property
+    def height(self) -> int:
+        return self.__height
