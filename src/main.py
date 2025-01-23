@@ -166,21 +166,26 @@ class AFU(TkinterDnD.Tk):
             save_file_path = file_path.replace(".wav", ".png")
             duration = len(audio_data) / audio_obj.sample_rate
             times = np.linspace(0, duration, len(audio_data))
+            # 画像サイズ、dpi 設定
+            fig_size = (10, 5)
+            dpi = 100
+            # 余白を最小限に設定
+            plt.tight_layout(pad=0)
             # カラーマップから色を取得
             colors = plt.cm.viridis(np.linspace(0, 1, audio_obj.num_channels))
-            plt.figure(figsize=(10, 6))
+            plt.figure(figsize=fig_size)
             [plt.plot(times, audio_data[:, i], color=colors[i], label=f"{i} ch") for i in range(0, audio_obj.num_channels, 1)]
             plt.title(f"{title}")
             plt.xlabel("Times [s]")
             plt.ylabel("Amplitude")
             plt.grid()
             plt.legend()
-            plt.savefig(f"{save_file_path}", dpi=300)
+            plt.savefig(f"{save_file_path}", dpi=dpi)
             plt.close()
 
             # 画像の読み込み、Text エリアに表示
             image = Image.open(save_file_path)
-            frame_obj.image = ImageTk.PhotoImage(image.resize((frame_obj.drag_and_drop.width * 10, frame_obj.drag_and_drop.height * 10)))
+            frame_obj.image = ImageTk.PhotoImage(image.resize((fig_size[0] * dpi, fig_size[1] * dpi)))
             drag_and_drop_obj.write_image(frame_obj.image)
 
 if __name__ == "__main__":
