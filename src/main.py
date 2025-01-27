@@ -1,5 +1,4 @@
 from utils import *
-import matplotlib.pyplot as plt
 
 def write_csv(file_path: str, audio_obj: AudioObj):
     with open(file_path, "w") as file_ptr:
@@ -83,6 +82,11 @@ class AFU(TkinterDnD.Tk):
         # ファイルメニュー
         self.file_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="ファイル", menu=self.file_menu)
+        # サブメニューを作成
+        self.save_menu = tk.Menu(self.file_menu, tearoff=0)
+        self.file_menu.add_cascade(label="保存", menu=self.save_menu)
+        self.save_menu.add_command(label="画像", command=self.save_image)
+        # メインに追加し直し
         self.file_menu.add_command(label="終了 (ESC) ", command=self.quit)
 
         # 編集メニュー
@@ -121,8 +125,30 @@ class AFU(TkinterDnD.Tk):
         # ファイルパスとオーディオバッファが取得できなければ何もしない
         if self.frame_top.file_path is not None:
             write_csv(self.frame_top.file_path.replace(".wav", ".csv"), self.audio_top)
-        if self.frame_bottom.file_path is not None:
+
             write_csv(self.frame_bottom.file_path.replace(".wav", ".csv"), self.audio_bottom)
+
+    def save_image(self):
+        file_types = [("PNG", "*.png"), ("JPEG", "*.jpg")]
+        if self.frame_top.photo_image is not None:
+            save_path = filedialog.asksaveasfilename(
+                defaultextension = ".png",
+                filetypes = file_types,
+                title = "画像を保存"
+            )
+
+            if save_path:
+                self.frame_top.pil_image.save(save_path)
+
+        if self.frame_bottom.photo_image is not None:
+            save_path = filedialog.asksaveasfilename(
+                defaultextension = ".png",
+                filetypes = file_types,
+                title = "画像を保存"
+            )
+
+            if save_path:
+                self.frame_bottom.pil_image.save(save_path)
 
     def notify(self, child, file_path):
         # 子クラス（ドラッグ＆ドロップフレーム）からの通知でオーディオファイルを解析
@@ -163,9 +189,9 @@ class AFU(TkinterDnD.Tk):
             # 音声波形をプロット
             audio_data = audio_obj.audio_buffer
             title = file_path.replace(".wav", "")
-            save_file_path = file_path.replace(".wav", ".png")
             duration = len(audio_data) / audio_obj.sample_rate
             times = np.linspace(0, duration, len(audio_data))
+            buf = io.BytesIO()
             # 画像サイズ、dpi 設定
             fig_size = (10, 5)
             dpi = 100
@@ -180,13 +206,16 @@ class AFU(TkinterDnD.Tk):
             plt.ylabel("Amplitude")
             plt.grid()
             plt.legend()
-            plt.savefig(f"{save_file_path}", dpi=dpi)
+            # プロットをバイト列として保存
+            plt.savefig(buf, dpi=dpi)
             plt.close()
 
-            # 画像の読み込み、Text エリアに表示
-            image = Image.open(save_file_path)
-            frame_obj.image = ImageTk.PhotoImage(image.resize((fig_size[0] * dpi, fig_size[1] * dpi)))
-            drag_and_drop_obj.write_image(frame_obj.image)
+            # バッファーの先頭にシークして画像を読み込み
+            buf.seek(0)
+            frame_obj.pil_image = Image.open(buf)
+            # テキストエリアに表示できるように形式を変更
+            frame_obj.photo_image = ImageTk.PhotoImage(frame_obj.pil_image.resize((fig_size[0] * dpi, fig_size[1] * dpi)))
+            drag_and_drop_obj.write_image(frame_obj.photo_image)
 
 if __name__ == "__main__":
     app = AFU()

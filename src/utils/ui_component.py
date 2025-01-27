@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from PIL import Image, ImageTk
 from tkinter import PhotoImage
+from tkinter import filedialog
 
 class DragAndDropUtil(tk.LabelFrame):
     def __init__(self, parent, width=50, height=50):

@@ -2,10 +2,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from collections import deque
 from .ui_component import *
+from PIL import Image
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
+import matplotlib.pyplot as plt
 import simpleaudio as sa
 import numpy as np
 import wave
+import io
 
 def get_window_size():
     root = tk.Tk()
@@ -26,7 +30,8 @@ class FrameObj():
     button_start: tk.Button = None
     button_stop: tk.Button = None
     drag_and_drop: DragAndDropUtil = None
-    image: PhotoImage = None
+    pil_image:Image = None
+    photo_image: PhotoImage = None
 
     @property
     def file_path(self):
