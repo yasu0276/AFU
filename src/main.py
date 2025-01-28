@@ -86,13 +86,13 @@ class AFU(TkinterDnD.Tk):
         self.save_menu = tk.Menu(self.file_menu, tearoff=0)
         self.file_menu.add_cascade(label="保存", menu=self.save_menu)
         self.save_menu.add_command(label="画像", command=self.save_image)
+        self.save_menu.add_command(label="CSV", command=self.save_csv)
         # メインに追加し直し
         self.file_menu.add_command(label="終了 (ESC) ", command=self.quit)
 
         # 編集メニュー
         self.edit_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="編集", menu=self.edit_menu)
-        self.edit_menu.add_command(label="csv 変換 ", command=self.to_txt)
 
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
         play_obj = sa.play_buffer(
@@ -121,34 +121,36 @@ class AFU(TkinterDnD.Tk):
         self.execute_stop(self.audio_top)
         self.execute_stop(self.audio_bottom)
 
-    def to_txt(self):
-        # ファイルパスとオーディオバッファが取得できなければ何もしない
-        if self.frame_top.file_path is not None:
-            write_csv(self.frame_top.file_path.replace(".wav", ".csv"), self.audio_top)
+    def save_csv(self):
+        file_types = [("CSV", "*.csv")]
+        audio_objects = [self.audio_top, self.audio_bottom]
 
-            write_csv(self.frame_bottom.file_path.replace(".wav", ".csv"), self.audio_bottom)
+        for audio_object in audio_objects:
+            # ファイルパスとオーディオバッファが取得できなければ何もしない
+            if audio_object:
+                save_path = filedialog.asksaveasfilename(
+                    defaultextension = ".csv",
+                    filetypes = file_types,
+                    title = "CSVを保存"
+                )
+
+            if save_path:
+                write_csv(save_path, audio_object)
 
     def save_image(self):
         file_types = [("PNG", "*.png"), ("JPEG", "*.jpg")]
-        if self.frame_top.photo_image is not None:
-            save_path = filedialog.asksaveasfilename(
-                defaultextension = ".png",
-                filetypes = file_types,
-                title = "画像を保存"
-            )
+        pil_images = [self.frame_top.pil_image, self.frame_bottom.pil_image]
+
+        for pil_image in pil_images:
+            if pil_image:
+                save_path = filedialog.asksaveasfilename(
+                    defaultextension = ".png",
+                    filetypes = file_types,
+                    title = "画像を保存"
+                )
 
             if save_path:
-                self.frame_top.pil_image.save(save_path)
-
-        if self.frame_bottom.photo_image is not None:
-            save_path = filedialog.asksaveasfilename(
-                defaultextension = ".png",
-                filetypes = file_types,
-                title = "画像を保存"
-            )
-
-            if save_path:
-                self.frame_bottom.pil_image.save(save_path)
+                pil_image.save(save_path)
 
     def notify(self, child, file_path):
         # 子クラス（ドラッグ＆ドロップフレーム）からの通知でオーディオファイルを解析
