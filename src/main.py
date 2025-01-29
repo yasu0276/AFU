@@ -1,16 +1,5 @@
 from utils import *
 
-def write_csv(file_path: str, audio_obj: AudioObj):
-    with open(file_path, "w") as file_ptr:
-        file_ptr.write(f"Number of Channels, {audio_obj.num_channels}\n")
-        file_ptr.write(f"Bytes per Sample, {audio_obj.bytes_to_sample}\n")
-        file_ptr.write(f"Sample Rate, {audio_obj.sample_rate}\n")
-
-        audio_data = audio_obj.audio_buffer
-
-        # 各チャンネルのバッファーを書き出し
-        [file_ptr.write(f"{ch}ch, " + ",".join(map(str, audio_data[:, ch])) + "\n") for ch in range(0, audio_obj.num_channels)]
-
 class AFU(TkinterDnD.Tk):
     def __init__(self):
         super().__init__()

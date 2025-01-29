@@ -1,29 +1,20 @@
-from __future__ import annotations
+from .common_import import *
+from .utils_function import get_window_size
 from dataclasses import dataclass, field
 from collections import deque
-from .ui_component import *
+from tkinter import PhotoImage
 from PIL import Image
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import tkinter as tk
-import matplotlib.pyplot as plt
-import simpleaudio as sa
 import numpy as np
+import tkinter as tk
 import wave
-import io
 
-def get_window_size():
-    root = tk.Tk()
-    width = root.winfo_screenwidth()
-    height = root.winfo_screenheight()
-    root.destroy()
-    return (width, height)
-
+max_width, max_height = get_window_size()
 @dataclass(slots=True)
 class FrameObj():
-    max_width: int = get_window_size()[0]
-    max_height: int = get_window_size()[1]
-    width: int = max_width // 2
-    height: int = max_height // 2
+    max_width: int = max_width
+    max_height: int = max_height
+    width: int = max_width
+    height: int = max_height
     title: str = "AFU"
     _file_path: str = None
     button: tk.Frame = None
@@ -34,7 +25,7 @@ class FrameObj():
     photo_image: PhotoImage = None
 
     @property
-    def file_path(self):
+    def file_path(self) -> str:
         return self._file_path
 
     @file_path.setter
@@ -51,7 +42,7 @@ class AudioObj():
     play_obj_que: deque = field(default_factory=deque)
 
     @property
-    def num_channels(self):
+    def num_channels(self) -> int:
         return self._num_channels
 
     @num_channels.setter
@@ -59,7 +50,7 @@ class AudioObj():
         self._num_channels = value
 
     @property
-    def bytes_to_sample(self):
+    def bytes_to_sample(self) -> int:
         return self._bytes_to_sample
 
     @bytes_to_sample.setter
@@ -67,7 +58,7 @@ class AudioObj():
         self._bytes_to_sample = value
 
     @property
-    def sample_rate(self):
+    def sample_rate(self) -> int:
         return self._sample_rate
 
     @sample_rate.setter

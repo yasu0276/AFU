@@ -1,9 +1,7 @@
-from __future__ import annotations
-import tkinter as tk
+from .common_import import *
 from tkinterdnd2 import DND_FILES, TkinterDnD
-from PIL import Image, ImageTk
 from tkinter import PhotoImage
-from tkinter import filedialog
+import tkinter as tk
 
 class DragAndDropUtil(tk.LabelFrame):
     def __init__(self, parent, width=50, height=50):
