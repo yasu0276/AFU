@@ -6,7 +6,7 @@ from tkinter import PhotoImage
 from PIL import Image
 import numpy as np
 import tkinter as tk
-import wave
+import soundfile as sf
 
 max_width, max_height = get_window_size()
 @dataclass(slots=True)
@@ -37,7 +37,7 @@ class AudioObj():
     _num_channels: int = 0
     _bytes_to_sample: int = 0
     _sample_rate: int = 0
-    wave_obj: wave.Wave_read = None
+    audio_file: sf.SoundFile = None
     audio_buffer: np.array = None
     play_obj_que: deque = field(default_factory=deque)
 

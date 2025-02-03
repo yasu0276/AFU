@@ -14,6 +14,6 @@ from typing import TYPE_CHECKING
 import tkinter as tk
 import matplotlib.pyplot as plt
 import simpleaudio as sa
+import soundfile as sf
 import numpy as np
-import wave
 import io

@@ -84,8 +84,13 @@ class AFU(TkinterDnD.Tk):
         self.menubar.add_cascade(label="編集", menu=self.edit_menu)
 
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
+        audio_data = audio_obj.audio_buffer
+
+        audio_data = np.int16(audio_data * 32767)
+        audio_data = audio_data.tobytes()
+
         play_obj = sa.play_buffer(
-            audio_obj.audio_buffer.tobytes(),
+            audio_data,
             audio_obj.num_channels,
             audio_obj.bytes_to_sample,
             audio_obj.sample_rate
@@ -141,72 +146,75 @@ class AFU(TkinterDnD.Tk):
             if save_path:
                 pil_image.save(save_path)
 
-    def notify(self, child, file_path):
-        # 子クラス（ドラッグ＆ドロップフレーム）からの通知でオーディオファイルを解析
-        if file_path is not None:
-            # 子クラスの生成 ID からどのフレームか特定
-            if (child == self.frame_top.drag_and_drop):
-                audio_obj = self.audio_top
-                frame_obj = self.frame_top
-                drag_and_drop_obj = self.frame_top.drag_and_drop
-            if (child == self.frame_bottom.drag_and_drop):
-                audio_obj = self.audio_bottom
-                frame_obj = self.frame_bottom
-                drag_and_drop_obj = self.frame_bottom.drag_and_drop
-            # ファイルパスの記録
-            frame_obj.file_path = file_path
-            # 波形データの読み込み
-            audio_obj.wave_obj = wave.open(file_path, 'rb')
-            audio_frame = audio_obj.wave_obj.readframes(audio_obj.wave_obj.getnframes())
-            # メタデータの取得
-            audio_obj.num_channels = audio_obj.wave_obj.getnchannels()
-            audio_obj.bytes_to_sample = audio_obj.wave_obj.getsampwidth()
-            audio_obj.sample_rate = audio_obj.wave_obj.getframerate()
+    def notify(self, child, file_path) -> None:
+        # ファイルパスが取得できなければ何もしない
+        if file_path is None:
+            return
 
-            # サンプル幅からデータ型を特定
-            audio_dtype = np.int16 if audio_obj.bytes_to_sample == 2 else np.uint8
-            audio_obj.audio_buffer = np.frombuffer(audio_frame, dtype=audio_dtype)
+        # 子クラスの生成 ID からどのフレームか特定
+        if (child == self.frame_top.drag_and_drop):
+            audio_obj = self.audio_top
+            frame_obj = self.frame_top
+            drag_and_drop_obj = self.frame_top.drag_and_drop
+        if (child == self.frame_bottom.drag_and_drop):
+            audio_obj = self.audio_bottom
+            frame_obj = self.frame_bottom
+            drag_and_drop_obj = self.frame_bottom.drag_and_drop
 
-            # 各チャンネルを分離
-            audio_obj.audio_buffer = audio_obj.audio_buffer.reshape(-1, audio_obj.num_channels)
+        # ファイルパスの記録
+        frame_obj.file_path = file_path
 
-            # メタデータの書き出し
-            content =  f"File Path, {file_path}\n"
-            content +=  f"Number of Channels, {audio_obj.num_channels}\n"
-            content +=  f"Bytes per Sample, {audio_obj.bytes_to_sample}\n"
-            content +=  f"Sample Rate, {audio_obj.sample_rate}\n"
-            drag_and_drop_obj.write_content(content)
+        # オーディオファイル、オーディオバッファの取得
+        audio_obj.audio_file = sf.SoundFile(file_path)
+        audio_obj.audio_buffer, _ = sf.read(file_path)
 
-            # 音声波形をプロット
-            audio_data = audio_obj.audio_buffer
-            title = file_path.replace(".wav", "")
-            duration = len(audio_data) / audio_obj.sample_rate
-            times = np.linspace(0, duration, len(audio_data))
-            buf = io.BytesIO()
-            # 画像サイズ、dpi 設定
-            fig_size = (10, 5)
-            dpi = 100
-            # 余白を最小限に設定
-            plt.tight_layout(pad=0)
-            # カラーマップから色を取得
-            colors = plt.cm.viridis(np.linspace(0, 1, audio_obj.num_channels))
-            plt.figure(figsize=fig_size)
-            [plt.plot(times, audio_data[:, i], color=colors[i], label=f"{i} ch") for i in range(0, audio_obj.num_channels, 1)]
-            plt.title(f"{title}")
-            plt.xlabel("Times [s]")
-            plt.ylabel("Amplitude")
-            plt.grid()
-            plt.legend()
-            # プロットをバイト列として保存
-            plt.savefig(buf, dpi=dpi)
-            plt.close()
+        # メタデータの取得
+        audio_obj.num_channels = audio_obj.audio_file.channels
+        audio_obj.bytes_to_sample = audio_obj.audio_file.subtype
+        audio_obj.sample_rate = audio_obj.audio_file.samplerate
 
-            # バッファーの先頭にシークして画像を読み込み
-            buf.seek(0)
-            frame_obj.pil_image = Image.open(buf)
-            # テキストエリアに表示できるように形式を変更
-            frame_obj.photo_image = ImageTk.PhotoImage(frame_obj.pil_image.resize((fig_size[0] * dpi, fig_size[1] * dpi)))
-            drag_and_drop_obj.write_image(frame_obj.photo_image)
+        # メタデータの書き出し
+        content =  f"File Path, {file_path}\n"
+        content +=  f"Number of Channels, {audio_obj.num_channels}\n"
+        content +=  f"Bytes per Sample, {audio_obj.bytes_to_sample}\n"
+        content +=  f"Sample Rate, {audio_obj.sample_rate}\n"
+        drag_and_drop_obj.write_content(content)
+
+        # 音声波形をプロット
+        audio_data = audio_obj.audio_buffer
+        # 各チャンネルを分離
+        if (audio_data.ndim == 2):
+            audio_data = audio_data.T
+        else:
+            audio_data = np.expand_dims(audio_data, axis=0)
+        title = file_path.replace(".wav", "")
+        duration = len(audio_obj.audio_file) / audio_obj.sample_rate
+        times = np.linspace(0, duration, len(audio_obj.audio_file))
+        buf = io.BytesIO()
+        # 画像サイズ、dpi 設定
+        fig_size = (10, 5)
+        dpi = 100
+        # 余白を最小限に設定
+        plt.tight_layout(pad=0)
+        # カラーマップから色を取得
+        colors = plt.cm.viridis(np.linspace(0, 1, audio_obj.num_channels))
+        plt.figure(figsize=fig_size)
+        [plt.plot(times, audio_data[i, :], color=colors[i], label=f"{i} ch") for i in range(0, audio_obj.num_channels, 1)]
+        plt.title(f"{title}")
+        plt.xlabel("Times [s]")
+        plt.ylabel("Amplitude")
+        plt.grid()
+        plt.legend()
+        # プロットをバイト列として保存
+        plt.savefig(buf, dpi=dpi)
+        plt.close()
+
+        # バッファーの先頭にシークして画像を読み込み
+        buf.seek(0)
+        frame_obj.pil_image = Image.open(buf)
+        # テキストエリアに表示できるように形式を変更
+        frame_obj.photo_image = ImageTk.PhotoImage(frame_obj.pil_image.resize((fig_size[0] * dpi, fig_size[1] * dpi)))
+        drag_and_drop_obj.write_image(frame_obj.photo_image)
 
 if __name__ == "__main__":
     app = AFU()
