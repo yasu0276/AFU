@@ -85,10 +85,6 @@ class AFU(TkinterDnD.Tk):
 
     def execute_start(self, frame_obj: FrameObj, audio_obj: AudioObj):
         audio_data = audio_obj.audio_buffer
-
-        audio_data = np.int16(audio_data * 32767)
-        audio_data = audio_data.tobytes()
-
         play_obj = sa.play_buffer(
             audio_data,
             audio_obj.num_channels,
@@ -151,7 +147,7 @@ class AFU(TkinterDnD.Tk):
         if file_path is None:
             return
 
-        # 子クラスの生成 ID からどのフレームか特定
+        # 子クラスの ID からどのフレーム呼び出しか特定
         if (child == self.frame_top.drag_and_drop):
             audio_obj = self.audio_top
             frame_obj = self.frame_top
@@ -164,21 +160,15 @@ class AFU(TkinterDnD.Tk):
         # ファイルパスの記録
         frame_obj.file_path = file_path
 
-        # オーディオファイル、オーディオバッファの取得
-        audio_obj.audio_file = sf.SoundFile(file_path)
-        audio_obj.audio_buffer, _ = sf.read(file_path)
-
-        # メタデータの取得
-        audio_obj.num_channels = audio_obj.audio_file.channels
-        audio_obj.bytes_to_sample = audio_obj.audio_file.subtype
-        audio_obj.sample_rate = audio_obj.audio_file.samplerate
+        # オーディオファイルの解析
+        analyze_audio_file(audio_obj, file_path)
 
         # メタデータの書き出し
         content =  f"File Path, {file_path}\n"
         content +=  f"Number of Channels, {audio_obj.num_channels}\n"
         content +=  f"Bytes per Sample, {audio_obj.bytes_to_sample}\n"
         content +=  f"Sample Rate, {audio_obj.sample_rate}\n"
-        drag_and_drop_obj.write_content(content)
+        print(content)
 
         # 音声波形をプロット
         audio_data = audio_obj.audio_buffer
