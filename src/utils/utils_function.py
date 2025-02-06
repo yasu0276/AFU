@@ -27,12 +27,13 @@ def get_window_size() -> tuple:
 def get_bytes_per_sample(sub_type: str) -> int:
     # サンプルフォーマットからバイト数を決定
     bit_depth_map = {
-        "PCM_U8": 1,   # 8-bit unsigned PCM
-        "PCM_16": 2,   # 16-bit signed PCM
-        "PCM_24": 3,   # 24-bit signed PCM
-        "PCM_32": 4,   # 32-bit signed PCM
-        "FLOAT" : 4,   # 32-bit float
-        "DOUBLE": 8,   # 64-bit float
+        "PCM_U8"         : 1, # 8-bit unsigned PCM
+        "PCM_16"         : 2, # 16-bit signed PCM
+        "PCM_24"         : 3, # 24-bit signed PCM
+        "PCM_32"         : 4, # 32-bit signed PCM
+        "FLOAT"          : 4, # 32-bit float
+        "DOUBLE"         : 8, # 64-bit float
+        "MPEG_LAYER_III" : 8  # mp3 も Numpy 形式で読み込んだ際は 64 bit となるためビット深度を 8 とする
     }
 
     return bit_depth_map.get(sub_type)
@@ -43,6 +44,7 @@ def analyze_audio_file(audio_obj: 'AudioObj', file_path: str) -> None:
 
     # メタデータの取得
     audio_obj.num_channels = audio_obj.audio_file.channels
+    audio_obj.subtype = audio_obj.audio_file.subtype
     audio_obj.bytes_to_sample = get_bytes_per_sample(audio_obj.audio_file.subtype)
     audio_obj.sample_rate = audio_obj.audio_file.samplerate
 
@@ -50,6 +52,7 @@ def analyze_audio_file(audio_obj: 'AudioObj', file_path: str) -> None:
     audio_buffer, _ = sf.read(file_path)
 
     # ビット深度に合わせた変換を行う
+    # 再生側がビット深度 2 までしか対応していないので合わせる
     match audio_obj.bytes_to_sample:
         case 2:
             audio_buffer = (audio_buffer * 32767).astype(np.int16)
@@ -57,6 +60,12 @@ def analyze_audio_file(audio_obj: 'AudioObj', file_path: str) -> None:
             audio_buffer = (audio_buffer * 8388607).astype(np.int32)
         case 4:
             audio_buffer = (audio_buffer * 2147483647).astype(np.int32)
+        case 8:  # 64bit Float (通常は32bit Float までなので 32 bit 変換)
+            # audio_buffer = (audio_buffer * 2147483647).astype(np.int32)
+            # 再生側がビット深度 4 までしか対応していないので上書きする
+            # audio_obj.bytes_to_sample = 4
+            audio_buffer = (audio_buffer * 32767).astype(np.int16)
+            audio_obj.bytes_to_sample = 2
 
     # 変換済みのバッファを登録
     audio_obj.audio_buffer = audio_buffer

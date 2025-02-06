@@ -37,6 +37,7 @@ class AudioObj():
     _num_channels: int = 0
     _bytes_to_sample: int = 0
     _sample_rate: int = 0
+    _subtype: str = None
     audio_file: sf.SoundFile = None
     audio_buffer: np.array = None
     play_obj_que: deque = field(default_factory=deque)
@@ -64,3 +65,11 @@ class AudioObj():
     @sample_rate.setter
     def sample_rate(self, value):
         self._sample_rate = value
+
+    @property
+    def subtype(self) -> str:
+        return self._subtype
+
+    @sample_rate.setter
+    def subtype(self, value):
+        self._subtype = value
