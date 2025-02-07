@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import tkinter as tk
 import soundfile as sf
 import numpy as np
+import logging
 if TYPE_CHECKING:
     from .format_data import AudioObj
 
@@ -24,7 +25,7 @@ def get_window_size() -> tuple:
     root.destroy()
     return (width, height)
 
-def get_bytes_per_sample(sub_type: str) -> int:
+def get_bytes_per_sample(subtype: str) -> int:
     # サンプルフォーマットからバイト数を決定
     bit_depth_map = {
         "PCM_U8"         : 1, # 8-bit unsigned PCM
@@ -36,7 +37,26 @@ def get_bytes_per_sample(sub_type: str) -> int:
         "MPEG_LAYER_III" : 8  # mp3 も Numpy 形式で読み込んだ際は 64 bit となるためビット深度を 8 とする
     }
 
-    return bit_depth_map.get(sub_type)
+    return bit_depth_map.get(subtype)
+
+def convert_audio_buffer(audio_buffer: np.array, subtype: str) -> np.array:
+    # サンプルフォーマットからバイト数を決定
+    match subtype:
+        case "PCM_U8": # 8-bit unsigned PCM
+            audio_buffer = audio_buffer.astype(np.int16)
+            audio_buffer = np.int16((audio_buffer - 128) * 256)  # 8-bit PCM は符号なしのため変換
+        case "PCM_16": # 16-bit signed PCM
+            audio_buffer = audio_buffer.astype(np.int16)
+        case "PCM_24": # 24-bit signed PCM
+            audio_buffer = np.int16(audio_buffer / (2**23) * 32767)  # 24-bit PCM を 16-bit にスケール
+        case "PCM_32": # 32-bit signed PCM
+            audio_buffer = np.int16(audio_buffer / (2**31) * 32767)  # 32-bit PCM を 16-bit にスケール
+        case "FLOAT" | "DOUBLE" | "MPEG_LAYER_III" | "VORBIS" : # 32-bit float, 64-bit float, mp3 は同じ変換形式かつ、クリッピング対策を行う
+            audio_buffer = np.int16(np.clip(audio_buffer * 32767, -32768, 32767))
+        case _: # どの形式でもない場合
+            logging.warning(f"Unexpected subtype encountered: {subtype}")
+
+    return audio_buffer
 
 def analyze_audio_file(audio_obj: 'AudioObj', file_path: str) -> None:
     # オーディオファイルの取得
@@ -49,23 +69,11 @@ def analyze_audio_file(audio_obj: 'AudioObj', file_path: str) -> None:
     audio_obj.sample_rate = audio_obj.audio_file.samplerate
 
     # オーディオファイル、オーディオバッファの取得
-    audio_buffer, _ = sf.read(file_path)
+    audio_buffer = audio_obj.audio_file.read()
 
-    # ビット深度に合わせた変換を行う
-    # 再生側がビット深度 2 までしか対応していないので合わせる
-    match audio_obj.bytes_to_sample:
-        case 2:
-            audio_buffer = (audio_buffer * 32767).astype(np.int16)
-        case 3:
-            audio_buffer = (audio_buffer * 8388607).astype(np.int32)
-        case 4:
-            audio_buffer = (audio_buffer * 2147483647).astype(np.int32)
-        case 8:  # 64bit Float (通常は32bit Float までなので 32 bit 変換)
-            # audio_buffer = (audio_buffer * 2147483647).astype(np.int32)
-            # 再生側がビット深度 4 までしか対応していないので上書きする
-            # audio_obj.bytes_to_sample = 4
-            audio_buffer = (audio_buffer * 32767).astype(np.int16)
-            audio_obj.bytes_to_sample = 2
+    # 再生側がビット深度 2 までしか対応していないので合わせる変換をする
+    audio_buffer = convert_audio_buffer(audio_buffer, audio_obj.subtype)
+    audio_obj.bytes_to_sample = 2
 
     # 変換済みのバッファを登録
     audio_obj.audio_buffer = audio_buffer

@@ -70,6 +70,6 @@ class AudioObj():
     def subtype(self) -> str:
         return self._subtype
 
-    @sample_rate.setter
+    @subtype.setter
     def subtype(self, value):
         self._subtype = value
